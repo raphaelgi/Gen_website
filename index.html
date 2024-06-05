@@ -107,7 +107,7 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('result').innerHTML = '';
 
-            fetch('/generate-account/' + service)
+            fetch(`/generate-account/${service}`)
                 .then(response => response.json())
                 .then(data => {
                     setTimeout(() => {
