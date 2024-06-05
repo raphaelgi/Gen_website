@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Account Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            transition: background-color 0.5s;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        img {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .account-box {
+            background-color: #191414;
+            color: #1DB954;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            width: 300px;
+            text-align: center;
+        }
+        .menu {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            background-color: #191414;
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .menu-button {
+            background-color: #1DB954;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: background-color 0.3s;
+        }
+        .menu-button:hover {
+            background-color: #1ED760;
+        }
+        .menu-content a {
+            color: #1DB954;
+            text-decoration: none;
+            display: block;
+            padding: 5px 0;
+            transition: color 0.3s;
+        }
+        .menu-content a:hover {
+            color: #1ED760;
+        }
+        #loading {
+            display: none;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body id="body">
+    <div class="menu">
+        <button class="menu-button" onclick="showGenerator('spotify')">Spotify Generator</button>
+        <button class="menu-button" onclick="showGenerator('netflix')">Netflix Generator</button>
+        <button class="menu-button" onclick="showLeaderboard()">Leaderboard</button>
+    </div>
+    <div class="container" id="generator">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg" id="service-image" alt="Service" width="200">
+        <h1 id="generator-title">Generate a Spotify Account</h1>
+        <button id="generate-btn">Generate Account</button>
+        <div id="loading">Loading...</div>
+        <div class="result" id="result"></div>
+    </div>
+    <div class="container" id="leaderboard" style="display:none;">
+        <h1>Account Generation Leaderboard</h1>
+        <div id="leaderboard-result"></div>
+    </div>
+    <script>
+        document.getElementById('generate-btn').addEventListener('click', function() {
+            var service = document.getElementById('generator-title').innerText.toLowerCase().includes('spotify') ? 'spotify' : 'netflix';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').innerHTML = '';
+
+            fetch('/generate-account/' + service)
+                .then(response => response.json())
+                .then(data => {
+                    setTimeout(() => {
+                        document.getElementById('loading').style.display = 'none';
+                        const accountInfo = data.account.split(':');
+                        const username = accountInfo[0];
+                        const password = accountInfo[1];
+
+                        document.getElementById('result').innerHTML = `
+                            <div class="account-box">Username: ${username}</div>
+                            <div class="account-box">Password: ${password}</div>
+                        `;
+                        updateLeaderboard();
+                    }, 8000); // 8-second loading time
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    console.error('Error:', error);
+                });
+        });
+
+        function showGenerator(service) {
+            document.getElementById('generator').style.display = 'block';
+            document.getElementById('leaderboard').style.display = 'none';
+
+            if (service === 'spotify') {
+                document.getElementById('body').style.backgroundColor = '#1DB954';
+                document.getElementById('service-image').src = 'https://upload.wikimedia.org/wikipedia/commons/2/26/Spotify_logo_with_text.svg';
+                document.getElementById('generator-title').innerText = 'Generate a Spotify Account';
+                document.getElementById('generate-btn').style.backgroundColor = '#191414';
+                document.getElementById('generate-btn').style.color = '#1DB954';
+            } else if (service === 'netflix') {
+                document.getElementById('body').style.backgroundColor = '#E50914';
+                document.getElementById('service-image').src = 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg';
+                document.getElementById('generator-title').innerText = 'Generate a Netflix Account';
+                document.getElementById('generate-btn').style.backgroundColor = '#191414';
+                document.getElementById('generate-btn').style.color = '#E50914';
+            }
+        }
+
+        function showLeaderboard() {
+            document.getElementById('generator').style.display = 'none';
+            document.getElementById('leaderboard').style.display = 'block';
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            fetch('/leaderboard')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('leaderboard-result').innerText = `Total accounts generated: ${data.count}`;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Initial load of leaderboard
+        updateLeaderboard();
+    </script>
+</body>
+</html>
